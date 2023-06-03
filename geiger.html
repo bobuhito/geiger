@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<body>
+<canvas id="myCanvas" width="1200" height="200"></canvas><br>
+<audio id="myAudio" src="click.wav" controls>Your browser does not support the HTML5 audio tag.</audio>
+<h1 id="out">Simulated Geiger Counter   </h1>
+
+<script>
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                   //
+//  INSTRUCTIONS:                                                                                    //
+//                                                                                                   //
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+var outEle = document.getElementById("out");
+
+//Chrome does not allow autoplay!
+//var audEle = document.getElementById("myAudio");
+//audEle.play();
+
+//var binned = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20];
+//var binned = [0,0,0,0,0,0,0,0,0,0];
+var binned = new Array(10).fill(0);
+//var binned = new Array(10);  //causes NaN distraction
+
+let c = document.getElementById("myCanvas");
+let ctx = c.getContext("2d");
+ctx.beginPath();
+ctx.moveTo(0, 0);
+
+
+// T is the absolute time of the prior geiger click, the next click is twait seconds later
+// mod(T,10) = Ti + Tf     :         0  <=  Tf  <  1         0  <=  integer Ti  <  10
+var Ti = 0;
+var Tf = 0.0; //fractional extra (above Ti) for latest hit
+
+var Tchart = 0;
+
+const Tavg = 2.0;
+//const Tavg = 0.5;
+var plotScale = 5.0*Tavg;
+
+function myFunction() {
+    var twait = -Tavg*Math.log(Math.random());   // Tavg=0.5 for 2cps=120cpm, Tavg=2.0 for 30cpm 
+    setTimeout(myFunction, Math.floor(1000*twait));
+//outEle.innerHTML += " "+twait;
+    var snd1=new Audio("click.wav"); snd1.play(); //I think snd1 automatically gets removed when play ends, so I don't need a remove() command...?
+	
+    Tf += twait;
+    var iwait = Math.floor(Tf);
+    Tf -= iwait;
+    while (iwait != 0) {
+        var total=0; for (var i=0; i<10; i++) total += binned[i];
+        if (Tchart==600) {ctx.moveTo(0,        plotScale*total);               Tchart=1;}
+        else             {ctx.lineTo(2*Tchart, plotScale*total); ctx.stroke(); Tchart++;}
+outEle.innerHTML += " "+total;
+        Ti++; if (Ti == 10) Ti=0;
+        binned[Ti] = 0;
+        iwait--;
+    }
+    binned[Ti] += 1;
+}
+setTimeout(myFunction, 5000);
+
+
+
+</script> 
+</body>
+</html>
